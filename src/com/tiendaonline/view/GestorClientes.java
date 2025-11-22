@@ -1,6 +1,7 @@
 package com.tiendaonline.view;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 import com.tiendaonline.controller.ControladorClientes;
@@ -11,13 +12,15 @@ import com.tiendaonline.model.Premium;
 public class GestorClientes {
     Scanner sc;
     ControladorClientes cc;
-    public GestorClientes(Scanner sc, ControladorClientes cc){
-       this.sc = sc;
-       this.cc = cc;
+
+    public GestorClientes(Scanner sc, ControladorClientes cc) {
+        this.sc = sc;
+        this.cc = cc;
     }
-    public void mostrarMenuClientes(){
+
+    public void mostrarMenuClientes() {
         int opcion;
-        do{
+        do {
             System.out.println("--Gestor de clientes--");
             System.out.println("1. Añadir un nuevo cliente");
             System.out.println("2. Mostrar todos los clientes");
@@ -27,7 +30,7 @@ public class GestorClientes {
             opcion = sc.nextInt();
             sc.nextLine();
 
-            switch(opcion){
+            switch (opcion) {
                 case 1 -> addCliente();
                 case 2 -> mostrarClientes();
                 case 3 -> mostrarClientesEstandar();
@@ -35,9 +38,10 @@ public class GestorClientes {
                 case 0 -> System.out.println("Saliendo del gestor de clientes");
                 default -> System.out.println("La opción seleccionada no es válida");
             }
-        }while(opcion != 0);
+        } while (opcion != 0);
     }
-    private void addCliente(){
+
+    private void addCliente() {
         System.out.print("Nombre: ");
         String nombre = sc.nextLine();
         System.out.print("Domicilio: ");
@@ -49,10 +53,10 @@ public class GestorClientes {
         int tipo;
         System.out.print("Tipo de cliente, 1. Estándar 2. Premium:  ");
         tipo = sc.nextInt();
-        if(tipo == 1){
+        if (tipo == 1) {
             cc.addClienteEstandar(nombre, domicilio, NIF, email);
-            System.out.println("Cliente Estandar fue añadido correctamente");
-        }else if(tipo == 2){
+            System.out.println("Cliente Estándar fue añadido correctamente");
+        } else if (tipo == 2) {
             int cuota = 30;
             double descuento = 0.2;
             cc.addClientePremium(nombre, domicilio, NIF, email, cuota, descuento);
@@ -60,34 +64,29 @@ public class GestorClientes {
         }
         sc.nextLine();
     }
-    private void mostrarClientes(){
-        List<Cliente> lista = cc.mostrarClientes();
-        if (lista.isEmpty()){
+
+    private void mostrarClientes() {
+        HashMap<String, Cliente> coleccion = cc.mostrarClientes();
+        if (coleccion.isEmpty()) {
             System.out.println("No hay ningún cliente registrado");
-        }else{
-            for(Cliente cliente : lista){
-                System.out.println(cliente);
-            }
+        } else {
+            coleccion.forEach((key, value) -> {
+                System.out.println(key + " = " + value);
+            });
         }
     }
-    private void mostrarClientesEstandar(){
-        ArrayList<Estandar> lista = cc.mostrarClientesEstandar();
-        if (lista.isEmpty()){
-            System.out.println("No hay ningún cliente estándar registrado");
-        }else{
-            for(Cliente cliente : lista){
-                System.out.println(cliente);
-            }
-        }
+
+    private void mostrarClientesEstandar() {
+        HashMap<String, Estandar> coleccionEstandar = cc.mostrarClientesEstandar();
+        coleccionEstandar.forEach((key, value)->{
+            System.out.println(key + "=" + value);
+        });
     }
-    private void mostrarClientesPremium(){
-        ArrayList<Premium> lista = cc.mostrarClientesPremium();
-        if (lista.isEmpty()){
-            System.out.println("No hay ningún cliente premium registrado");
-        }else{
-            for(Cliente cliente : lista){
-                System.out.println(cliente);
-            }
-        }
+
+    private void mostrarClientesPremium() {
+       HashMap<String, Premium> coleccionPremium = cc.mostrarClientesPremium();
+       coleccionPremium.forEach((key, value) ->{
+           System.out.println(key + "=" + value);
+       });
     }
 }

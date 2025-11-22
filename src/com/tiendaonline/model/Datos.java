@@ -2,82 +2,72 @@ package com.tiendaonline.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
 
 public class Datos {
-    ArrayList<Cliente> clientes;
-    ArrayList<Articulo> articulos;
-    ArrayList<Pedido> pedidos;
-    Articulo articulo;
+    HashMap<String, Cliente> clientes;
+    HashMap<String, Articulo> articulos;
+
+    HashMap<Integer, Pedido> pedidos;
+
     public Datos(){
-        this.clientes = new ArrayList<>();
-        this.articulos = new ArrayList<>();
-        this.pedidos = new ArrayList<>();
+        this.clientes = new HashMap<>();
+        this.articulos = new HashMap<>();
+        this.pedidos = new HashMap<>();
 
     }
     public void addArticulo(Articulo articulo){
-        articulos.add(articulo);
+        articulos.put(articulo.getCodigoArticulo(), articulo);
     }
-    public ArrayList<Articulo> mostrarArticulos(){
+    public HashMap<String, Articulo> mostrarArticulos(){
         return articulos;
     }
     public void addClienteEstandar(Estandar clienteEstandar){
-        clientes.add(clienteEstandar);
+        clientes.put(clienteEstandar.getNifCliente(), clienteEstandar);
     }
     public void addClientePremium(Premium clientePremium){
-        clientes.add(clientePremium);
+        clientes.put(clientePremium.getNifCliente(), clientePremium);
     }
-    public ArrayList<Cliente> mostrarClientes(){
+    public HashMap<String, Cliente> mostrarClientes(){
         return clientes;
     }
-    public ArrayList<Estandar> mostrarClientesEstandar(){
-        ArrayList<Estandar> listaEstandar = new ArrayList<>();
-        for (Cliente cliente : clientes){
-            if (cliente instanceof Estandar){
-                listaEstandar.add((Estandar) cliente);
+    public HashMap<String, Estandar> mostrarClientesEstandar(){
+        HashMap<String, Estandar> coleccionEstandar = new HashMap<>();
+        clientes.values().forEach(cliente ->{
+            if(cliente instanceof Estandar){
+                coleccionEstandar.put(cliente.getNifCliente(), (Estandar) cliente);
             }
-        }
-        return listaEstandar;
+        });
+        return coleccionEstandar;
     }
-    public ArrayList<Premium> mostrarClientesPremium(){
-        ArrayList<Premium> listaPremium = new ArrayList<>();
-        for (Cliente cliente : clientes){
+    public HashMap<String, Premium> mostrarClientesPremium(){
+        HashMap<String, Premium> coleccionPremium = new HashMap<>();
+        clientes.values().forEach(cliente -> {
             if(cliente instanceof Premium){
-                listaPremium.add((Premium) cliente);
+                coleccionPremium.put(cliente.getNifCliente(), (Premium) cliente);
             }
-        }
-        return listaPremium;
+        });
+        return coleccionPremium;
     }
     public Articulo buscarArticulo(String codigo_articulo){
-        for (Articulo articulo : articulos){
-            if (codigo_articulo.equals(articulo.getCodigoArticulo())){
-                return articulo;
-            }
-        }
-        return null;
+        return articulos.get(codigo_articulo);
     }
+
     public Cliente buscarClientePorNif(String NIF){
-        for (Cliente cliente : clientes){
-            if (NIF.equals(cliente.getNifCliente())){
-                return cliente;
-            }
-        }
-        return null;
+        return clientes.get(NIF);
     }
     public boolean addPedido(int numero_pedido, int cantidad_unidades, LocalDateTime fecha_pedido, Cliente cliente, Articulo articulo){
         Pedido pedido = new Pedido(numero_pedido, cantidad_unidades, fecha_pedido, articulo, cliente);
-        pedidos.add(pedido);
-        return true;
+        if(pedidos.putIfAbsent(pedido.getNumeroPedido(), pedido) == null){
+            return true;
+        }
+        return false;
     }
     public Pedido buscarPedido(int numero_pedido){
-        for(Pedido pedido : pedidos){
-            if(numero_pedido == pedido.getNumeroPedido()){
-                return pedido;
-            }
-        }
-        return null;
+        return pedidos.get(numero_pedido);
     }
     public boolean pedidoEliminable(Pedido pedidoEncontrado){
         LocalDateTime fecha = LocalDateTime.now();
@@ -88,7 +78,8 @@ public class Datos {
         return true;
     }
     public boolean eliminarPedido(Pedido pedidoEncontrado){
-        if(pedidos.remove(pedidoEncontrado)){
+        Pedido eliminado = pedidos.remove(pedidoEncontrado.getNumeroPedido());
+        if(eliminado == null){
             return true;
         }
         return false;
@@ -96,49 +87,49 @@ public class Datos {
     public List<Pedido> getPedidosPendientesCliente(String NIF){
         List<Pedido> lista = new ArrayList<>();
         LocalDateTime fecha = LocalDateTime.now();
-        for(Pedido pedido : pedidos){
+        pedidos.values().forEach((pedido)->{
             if(NIF.equals(pedido.getCliente().getNifCliente())){
                 int tiempoPreparacion = pedido.getArticulo().getTiempoPreparacionArticulo();
                 if(fecha.isBefore(pedido.getFechaPedido().plusMinutes(tiempoPreparacion))){
                     lista.add(pedido);
                 }
             }
-        }
+        });
         return lista;
     }
     public List<Pedido> getTodosPedidosPendientes(){
         List<Pedido> lista = new ArrayList<>();
         LocalDateTime fecha = LocalDateTime.now();
-        for(Pedido pedido : pedidos){
+        pedidos.values().forEach((pedido)->{
             int tiempoPreparacion = pedido.getArticulo().getTiempoPreparacionArticulo();
             if(fecha.isBefore(pedido.getFechaPedido().plusMinutes(tiempoPreparacion))){
                 lista.add(pedido);
             }
-        }
+        });
         return lista;
     }
     public List<Pedido> getTodosPedidosEnviadosCliente(String NIF){
         List<Pedido> lista = new ArrayList<>();
         LocalDateTime fecha = LocalDateTime.now();
-        for(Pedido pedido : pedidos){
+        pedidos.values().forEach((pedido)->{
             if(NIF.equals(pedido.getCliente().getNifCliente())){
                 int tiempoPreparacion = pedido.getArticulo().getTiempoPreparacionArticulo();
                 if(fecha.isAfter(pedido.getFechaPedido().plusMinutes(tiempoPreparacion))){
                     lista.add(pedido);
                 }
             }
-        }
+        });
         return lista;
     }
     public List<Pedido> getTodosPedidosEnviados(){
         List<Pedido> lista = new ArrayList<>();
         LocalDateTime fecha = LocalDateTime.now();
-        for(Pedido pedido : pedidos){
+        pedidos.values().forEach((pedido)->{
             int tiempoPreparacion = pedido.getArticulo().getTiempoPreparacionArticulo();
             if(fecha.isAfter(pedido.getFechaPedido().plusMinutes(tiempoPreparacion))){
                 lista.add(pedido);
             }
-        }
+        });
         return lista;
     }
 

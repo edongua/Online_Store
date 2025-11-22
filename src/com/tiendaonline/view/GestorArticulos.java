@@ -6,6 +6,7 @@ import com.tiendaonline.controller.ControladorArticulos;
 import com.tiendaonline.controller.ControladorClientes;
 import com.tiendaonline.model.Articulo;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
@@ -50,13 +51,16 @@ public class GestorArticulos {
         ca.addArticulo(codigo, descripcion, precio, gastosEnvio, tiempoPrep);
     }
     private void mostrarArticulos () {
-        List<Articulo> lista = ca.mostrarArticulos();
-        if (lista.isEmpty()) {
+        HashMap<String, Articulo> coleccion = ca.mostrarArticulos();
+        if (coleccion.isEmpty()){
             System.out.println("No hay artículos registrados");
-        } else {
-            for (Articulo art : lista) {
-                System.out.print(art);
-            }
+        }
+        else{
+            coleccion.forEach((key, value) -> {
+                System.out.println(key + " = " + value);
+            });
         }
     }
+
+
 }

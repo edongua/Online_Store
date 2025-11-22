@@ -6,6 +6,7 @@ import com.tiendaonline.model.Estandar;
 import com.tiendaonline.model.Premium;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ControladorClientes {
     Datos datos;
@@ -20,20 +21,15 @@ public class ControladorClientes {
         Premium nuevo = new Premium(nombre, domicilio, nif, email, cuota, descuento);
         datos.addClientePremium(nuevo);
     }
-    public ArrayList<Cliente> mostrarClientes(){
-        ArrayList<Cliente> lista;
-        lista = datos.mostrarClientes();
-        return lista;
+    public HashMap<String, Cliente> mostrarClientes(){
+        HashMap<String, Cliente> coleccion;
+        coleccion = datos.mostrarClientes();
+        return coleccion;
     }
-    public ArrayList<Estandar> mostrarClientesEstandar(){
-        ArrayList<Estandar> listaEstandar;
-        listaEstandar = datos.mostrarClientesEstandar();
-        return listaEstandar;
+    public HashMap<String, Estandar> mostrarClientesEstandar(){
+        return datos.mostrarClientesEstandar();
     }
-    public ArrayList<Premium> mostrarClientesPremium(){
-        ArrayList<Premium> listaPremium;
-        listaPremium = datos.mostrarClientesPremium();
-        return listaPremium;
+    public HashMap<String, Premium> mostrarClientesPremium(){
+        return datos.mostrarClientesPremium();
     }
-
 }

@@ -86,10 +86,13 @@ public class GestorPedidos {
                 cc.addClientePremium(nombre, domicilio, NIF, email, cuota, descuento);
                 System.out.println("Cliente Premium fue añadido correctamente");
             }
+            cliente = cp.buscarClientePorNif(NIF);
         }
-        cliente = cp.buscarClientePorNif(NIF);
         if(cp.addPedido(numero_pedido, cantidad_unidades, fecha_pedido, cliente, articulo)){
             System.out.println("El pedido " + numero_pedido + " ha sido añadido correctamente: ");
+        }
+        else{
+            System.out.println("El pedido no se pudo añadir");
         }
     }
     private void eliminarPedido(){
