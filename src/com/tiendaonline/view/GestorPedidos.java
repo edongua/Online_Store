@@ -1,6 +1,8 @@
 package com.tiendaonline.view;
 
-import com.tiendaonline.controller.Controlador;
+
+import com.tiendaonline.controller.ControladorClientes;
+import com.tiendaonline.controller.ControladorPedidos;
 import com.tiendaonline.model.Articulo;
 import com.tiendaonline.model.Cliente;
 import com.tiendaonline.model.Pedido;
@@ -12,13 +14,13 @@ import java.util.List;
 import java.util.Scanner;
 
 public class GestorPedidos {
-    private final Scanner scanner;
-    private final Controlador controlador;
-
-
-    public GestorPedidos(Scanner scanner, Controlador controlador){
-        this.scanner = scanner;
-        this.controlador = controlador;
+    Scanner sc;
+    ControladorPedidos cp;
+    ControladorClientes cc;
+    public GestorPedidos(Scanner sc, ControladorPedidos cp, ControladorClientes cc){
+        this.sc = sc;
+        this.cp = cp;
+        this.cc = cc;
     }
     public void mostrarMenuPedidos(){
         int opcion;
@@ -29,8 +31,8 @@ public class GestorPedidos {
             System.out.println("3. Mostrar pedidos pendientes de envío");
             System.out.println("4. Mostrar pedidos enviados");
             System.out.println("0. Salir del gestor de pedidos");
-            opcion = scanner.nextInt();
-            scanner.nextLine();
+            opcion = sc.nextInt();
+            sc.nextLine();
 
             switch(opcion){
                 case 1 -> addPedido();
@@ -44,80 +46,64 @@ public class GestorPedidos {
     }
     private void addPedido(){
         System.out.print("Número del pedido: ");
-        int numero_pedido = scanner.nextInt();
-        scanner.nextLine();
+        int numero_pedido = sc.nextInt();
+        sc.nextLine();
         System.out.print("Cantidad de unidades: ");
-        int cantidad_unidades = scanner.nextInt();
-        scanner.nextLine();
-        System.out.print("Fecha de la creación del pedido (yyyy-MM-dd): ");
-        String fecha_texto = scanner.nextLine();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        LocalDate fecha = LocalDate.parse(fecha_texto, formatter);
-        LocalDateTime fecha_pedido = fecha.atStartOfDay();
-
-        String codigo_articulo;
-        while (true){
-            System.out.print("Artículo, código: ");
-            codigo_articulo = scanner.nextLine();
-
-            if (controlador.buscarArticulo(codigo_articulo)) {
-                break;
-            }
-            System.out.println("El artículo no existe, introduzca otro código o pulse 0 para terminar: ");
-            String opcion = scanner.nextLine();
-            if (opcion.equals("0")){
-                return;
-            }
-            if (controlador.buscarArticulo(opcion)){
-                codigo_articulo = opcion;
-                break;
-            }
+        int cantidad_unidades = sc.nextInt();
+        sc.nextLine();
+        System.out.print("Fecha de la creación del pedido (dd/MM/yyyy HH:mm): ");
+        String fecha = sc.nextLine();
+        DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        LocalDateTime fecha_pedido = LocalDateTime.parse(fecha, formato);
+        System.out.print("Código del artículo: ");
+        String codigo_articulo = sc.nextLine();
+        Articulo articulo;
+        articulo = cp.buscarArticulo(codigo_articulo);
+        if(articulo == null){
+            System.out.println("Artículo no encontrado, pruebe otra vez con otro código");
+            return;
         }
-        Articulo articulo = controlador.getArticulo(codigo_articulo);
-
-        System.out.print("Cliente, nif: ");
-        String nif = scanner.nextLine().trim();
-        System.out.println("DEBUG NIF leído = [" + nif + "]");
+        System.out.print("NIF del cliente: ");
+        String NIF = sc.nextLine();
         Cliente cliente;
-        if(controlador.buscarCliente(nif)){
-            cliente = controlador.getCliente(nif);
-        }else{
-            System.out.println("El cliente no existe. Se debe crear un cliente antes de continuar: ");
+        cliente = cp.buscarClientePorNif(NIF);
+        if(cliente == null){
+            System.out.println("El cliente no existe, añada el cliente a la BBDD");
             System.out.print("Nombre: ");
-            String nombre = scanner.nextLine();
-            System.out.print("Domicilio: ");
-            String domicilio = scanner.nextLine();
-            System.out.print("NIF: ");
-            nif = scanner.nextLine();
+            String nombre = sc.nextLine();
+            System.out.print("Dimicilio: ");
+            String domicilio = sc.nextLine();
             System.out.print("Email: ");
-            String email = scanner.nextLine();
-            int tipo_cliente;
-            do{
-                System.out.println("Indique el tipo de cliente: 1-Estandar, 2-Premium");
-                tipo_cliente = scanner.nextInt();
-                scanner.nextLine();
-                if(tipo_cliente == 1){
-                    controlador.addClienteEstandar(nombre, domicilio, nif, email);
-                }else if(tipo_cliente == 2){
-                    controlador.addClientePremium(nombre, domicilio, nif, email, 30, 0.2);
-                }
-            }while (tipo_cliente != 1 && tipo_cliente != 2);
-            cliente = controlador.getCliente(nif);
+            String email = sc.nextLine();
+            System.out.println("Tipo de cliente, 1. Estándar 2. Premium:  ");
+            int tipo = sc.nextInt();
+            if(tipo == 1){
+                cc.addClienteEstandar(nombre, domicilio, NIF, email);
+                System.out.println("Cliente Estandar fue añadido correctamente");
+            }else if(tipo == 2){
+                int cuota = 30;
+                double descuento = 0.2;
+                cc.addClientePremium(nombre, domicilio, NIF, email, cuota, descuento);
+                System.out.println("Cliente Premium fue añadido correctamente");
+            }
         }
-        controlador.addPedido(numero_pedido, cantidad_unidades, fecha_pedido, articulo, cliente);
-        System.out.println("Pedido añadido correctamente");
+        cliente = cp.buscarClientePorNif(NIF);
+        if(cp.addPedido(numero_pedido, cantidad_unidades, fecha_pedido, cliente, articulo)){
+            System.out.println("El pedido " + numero_pedido + " ha sido añadido correctamente: ");
+        }
     }
     private void eliminarPedido(){
         System.out.print("Numero del pedido a eliminar: ");
-        int numero_pedido = scanner.nextInt();
-        if(controlador.buscarPedido(numero_pedido)){
+        int numero_pedido = sc.nextInt();
+        Pedido pedidoEncontrado = cp.buscarPedido(numero_pedido);
+        if(pedidoEncontrado != null){
             System.out.println("El pedido se encontró...");
-            if(controlador.pedidoEliminable(numero_pedido)){
-                if(controlador.eliminarPedido(numero_pedido)){
+            if(cp.pedidoEliminable(pedidoEncontrado)){
+                if(cp.eliminarPedido(pedidoEncontrado)){
                     System.out.println("El pedido ha sido eliminado correctamente");
                 }
             }else{
-                System.out.println("El pedido fue enviado y no se puede eliminar");
+                System.out.println("El pedido ha sido enviado y no se puede eliminar");
             }
         }else{
             System.out.println("El pedido no se encontró");
@@ -125,37 +111,57 @@ public class GestorPedidos {
     }
     private void mostrarPedidosPendientes(){
         System.out.print("¿Cómo desea mostrar los pedidos pendientes de envío? 1-Filtrar Por cliente, 2-Mostrar todos: ");
-        int opcion = scanner.nextInt();
-        scanner.nextLine();
+        int opcion = sc.nextInt();
+        sc.nextLine();
         if(opcion == 1){
             System.out.print("Indique el NIF del cliente: ");
-            String nif = scanner.nextLine();
-            List<Pedido> lista = controlador.getPedidosPendientesCliente(nif);
-            for (Pedido pedido : lista){
-                System.out.println(pedido);
+            String NIF = sc.nextLine();
+            List<Pedido> lista = cp.getPedidosPendientesCliente(NIF);
+            if(lista.isEmpty()){
+                System.out.println("El cliente con el nif " + NIF + "no tiene pedidos pendientes" );
+            }
+            else {
+                for (Pedido pedido : lista){
+                    System.out.println(pedido);
+                }
             }
         }else if(opcion == 2){
-            List<Pedido> lista = controlador.getPedidosPendientes();
-            for (Pedido pedido : lista){
-                System.out.println(pedido);
+            List<Pedido> lista = cp.getTodosPedidosPendientes();
+            if(lista.isEmpty()){
+                System.out.println("No hay pedidos pendientes de envío");
+            }
+            else{
+                for (Pedido pedido : lista){
+                    System.out.println(pedido);
+                }
             }
         }
     }
     private void mostrarPedidosEnviados(){
         System.out.print("¿Cómo desea mostrar los pedidos enviados? 1-Filtrar Por cliente, 2-Mostrar todos: ");
-        int opcion = scanner.nextInt();
-        scanner.nextLine();
+        int opcion = sc.nextInt();
+        sc.nextLine();
         if(opcion == 1){
             System.out.print("Indique el NIF del cliente: ");
-            String nif = scanner.nextLine();
-            List<Pedido> lista = controlador.getPedidosEnviadosCliente(nif);
-            for (Pedido pedido : lista){
-                System.out.println(pedido);
+            String NIF = sc.nextLine();
+            List<Pedido> lista = cp.getTodosPedidosEnviadosCliente(NIF);
+            if(lista.isEmpty()){
+                System.out.print("El cliente con el nif " + NIF + " no tiene pedidos enviados");
+            }
+            else{
+                for (Pedido pedido : lista){
+                    System.out.println(pedido);
+                }
             }
         }else if(opcion == 2){
-            List<Pedido> lista = controlador.getPedidosEnviados();
-            for (Pedido pedido : lista){
-                System.out.println(pedido);
+            List<Pedido> lista = cp.getTodosPedidosEnviados();
+            if(lista.isEmpty()){
+                System.out.println("No hay pedidos enviados");
+            }
+            else{
+                for (Pedido pedido : lista){
+                    System.out.println(pedido);
+                }
             }
         }
     }
